@@ -11,6 +11,7 @@ pub mod xcm_config;
 pub use fee::WeightToFee;
 
 pub mod constants;
+mod contracts;
 use constants::currency::*;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
@@ -38,7 +39,7 @@ use frame_support::{
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
-	EnsureRoot, EnsureSigned,
+	EnsureRoot, EnsureSigned, EnsureWithSuccess,
 };
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 pub use runtime_common::{
@@ -105,6 +106,8 @@ pub type Executive = frame_executive::Executive<
 	Runtime,
 	AllPalletsWithSystem,
 >;
+
+pub type Migrations = pallet_contracts::Migration<Runtime>;
 
 pub mod fee {
 	use super::{Balance, ExtrinsicBaseWeight, MILLIUNIT};
@@ -573,6 +576,118 @@ impl pallet_uniques::Config for Runtime {
 	type Locker = ();
 }
 
+impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
+
+// parameter_types! {
+// 	pub const DepositPerItem: Balance = deposit(1, 0);
+// 	pub const DepositPerByte: Balance = deposit(0, 1);
+// 	pub const DefaultDepositLimit: Balance = deposit(1024, 1024 * 1024);
+// 	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
+// }
+
+// impl pallet_contracts::Config for Runtime {
+// 	type Time = Timestamp;
+// 	type Randomness = RandomnessCollectiveFlip;
+// 	type Currency = Balances;
+// 	type RuntimeEvent = RuntimeEvent;
+// 	type RuntimeCall = RuntimeCall;
+// 	/// The safest default is to allow no calls at all.
+// 	///
+// 	/// Runtimes should whitelist dispatchables that are allowed to be called from contracts
+// 	/// and make sure they are stable. Dispatchables exposed to contracts are not allowed to
+// 	/// change because that would break already deployed contracts. The `Call` structure itself
+// 	/// is not allowed to change the indices of existing pallets, too.
+// 	type CallFilter = Nothing;
+// 	type DepositPerItem = DepositPerItem;
+// 	type DepositPerByte = DepositPerByte;
+// 	// type DefaultDepositLimit = DefaultDepositLimit;
+// 	type CallStack = [pallet_contracts::Frame<Self>; 5];
+// 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
+// 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+// 	type ChainExtension = ();
+// 	type DeletionQueueDepth = ();
+// 	type DeletionWeightLimit = ();
+// 	type Schedule = Schedule;
+// 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
+// 	type MaxCodeLen = ConstU32<{ 123 * 1024 }>;
+// 	type MaxStorageKeyLen = ConstU32<128>;
+// 	type UnsafeUnstableInterface = ConstBool<false>;
+// 	type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
+// }
+
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 1 * DOLLARS;
+	pub const SpendPeriod: BlockNumber = 1 * DAYS;
+	pub const Burn: Permill = Permill::from_percent(50);
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+	pub const MaxApprovals: u32 = 100;
+	pub const DataDepositPerByte: Balance = 1 * CENTS;
+	pub const MaximumReasonLength: u32 = 300;
+	pub const MaxBalance: Balance = Balance::max_value();
+}
+
+impl pallet_treasury::Config for Runtime {
+	type PalletId = TreasuryPalletId;
+	type Currency = Balances;
+	type ApproveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type RejectOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
+	>;
+	type RuntimeEvent = RuntimeEvent;
+	type OnSlash = ();
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type ProposalBondMaximum = ();
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
+	type BurnDestination = ();
+	type SpendFunds = Bounties;
+	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
+	type MaxApprovals = MaxApprovals;
+	type SpendOrigin = EnsureWithSuccess<EnsureRoot<AccountId>, AccountId, MaxBalance>;
+}
+
+parameter_types! {
+	pub const BountyValueMinimum: Balance = 5 * DOLLARS;
+	pub const BountyDepositBase: Balance = 1 * DOLLARS;
+	pub const CuratorDepositMultiplier: Permill = Permill::from_percent(50);
+	pub const CuratorDepositMin: Balance = 1 * DOLLARS;
+	pub const CuratorDepositMax: Balance = 100 * DOLLARS;
+	pub const BountyDepositPayoutDelay: BlockNumber = 1 * DAYS;
+	pub const BountyUpdatePeriod: BlockNumber = 14 * DAYS;
+}
+
+impl pallet_bounties::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type BountyDepositBase = BountyDepositBase;
+	type BountyDepositPayoutDelay = BountyDepositPayoutDelay;
+	type BountyUpdatePeriod = BountyUpdatePeriod;
+	type CuratorDepositMultiplier = CuratorDepositMultiplier;
+	type CuratorDepositMin = CuratorDepositMin;
+	type CuratorDepositMax = CuratorDepositMax;
+	type BountyValueMinimum = BountyValueMinimum;
+	type DataDepositPerByte = DataDepositPerByte;
+	type MaximumReasonLength = MaximumReasonLength;
+	type WeightInfo = pallet_bounties::weights::SubstrateWeight<Runtime>;
+	type ChildBountyManager = ChildBounties;
+}
+
+parameter_types! {
+	pub const ChildBountyValueMinimum: Balance = 1 * DOLLARS;
+}
+
+impl pallet_child_bounties::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type MaxActiveChildBountyCount = ConstU32<5>;
+	type ChildBountyValueMinimum = ChildBountyValueMinimum;
+	type WeightInfo = pallet_child_bounties::weights::SubstrateWeight<Runtime>;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub struct Runtime where
@@ -614,6 +729,14 @@ construct_runtime!(
 
 		// NFT Token
 		Uniques: pallet_uniques,
+
+		// Smart contract
+		Contracts: pallet_contracts = 40,
+		RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
+
+		Treasury: pallet_treasury,
+		Bounties: pallet_bounties,
+		ChildBounties: pallet_child_bounties,
 	}
 );
 
@@ -626,6 +749,10 @@ mod benches {
 		[pallet_session, SessionBench::<Runtime>]
 		[pallet_timestamp, Timestamp]
 		[pallet_uniques, Uniques]
+		[pallet_contracts, Contracts]
+		[pallet_treasury, Treasury]
+		[pallet_bounties, Bounties]
+		[pallet_child_bounties, ChildBounties]
 		[pallet_collator_selection, CollatorSelection]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
 	);
@@ -639,6 +766,72 @@ impl_runtime_apis! {
 
 		fn authorities() -> Vec<AuraId> {
 			Aura::authorities().into_inner()
+		}
+	}
+
+	impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash> for Runtime {
+		fn call(
+			origin: AccountId,
+			dest: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			input_data: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+			let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
+			Contracts::bare_call(
+				origin,
+				dest,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				input_data,
+				contracts::CONTRACTS_DEBUG_OUTPUT,
+				pallet_contracts::Determinism::Enforced,
+			)
+		}
+
+		fn instantiate(
+			origin: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
+			data: Vec<u8>,
+			salt: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance> {
+			let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
+			Contracts::bare_instantiate(
+				origin,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				code,
+				data,
+				salt,
+				contracts::CONTRACTS_DEBUG_OUTPUT,
+			)
+		}
+
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+			determinism: pallet_contracts::Determinism,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance> {
+			Contracts::bare_upload_code(
+				origin,
+				code,
+				storage_deposit_limit,
+				determinism,
+			)
+		}
+
+		fn get_storage(
+			address: AccountId,
+			key: Vec<u8>,
+		) -> pallet_contracts_primitives::GetStorageResult {
+			Contracts::get_storage(address, key)
 		}
 	}
 

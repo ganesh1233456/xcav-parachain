@@ -119,7 +119,7 @@ pub mod devnet {
 			None,
 			None,
 			None,
-			None,
+			Some(properties),
 			Extensions {
 				relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
 				para_id: PARA_ID,
@@ -225,6 +225,7 @@ pub mod devnet {
 					(2, bob.into(), 500_000_000_000),
 				],
 			},
+			treasury: Default::default(),
 			parachain_info: devnet_runtime::ParachainInfoConfig { parachain_id: id },
 			collator_selection: devnet_runtime::CollatorSelectionConfig {
 				invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
@@ -311,7 +312,7 @@ pub mod mainnet {
 			None,
 			None,
 			None,
-			None,
+			Some(properties),
 			Extensions {
 				relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
 				para_id: PARA_ID,

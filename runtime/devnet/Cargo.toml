@@ -46,6 +46,12 @@ pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", 
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
 pallet-utility = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
 pallet-uniques = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
+pallet-insecure-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
+pallet-treasury = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
+pallet-bounties = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
+pallet-child-bounties = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
 sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.42" }
@@ -115,6 +121,12 @@ std = [
 	"pallet-utility/std",
 	"pallet-xcm/std",
 	"pallet-uniques/std",
+	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-treasury/std",
+	"pallet-bounties/std",
+	"pallet-child-bounties/std",
+	"pallet-insecure-randomness-collective-flip/std",
 	"parachain-info/std",
 	"polkadot-parachain/std",
 	"polkadot-runtime-common/std",
@@ -149,6 +161,10 @@ runtime-benchmarks = [
   "pallet-timestamp/runtime-benchmarks",
   "pallet-utility/runtime-benchmarks",
   "pallet-uniques/runtime-benchmarks",
+  "pallet-contracts/runtime-benchmarks",
+  "pallet-treasury/runtime-benchmarks",
+  "pallet-bounties/runtime-benchmarks",
+  "pallet-child-bounties/runtime-benchmarks",
   "pallet-xcm/runtime-benchmarks",
   "sp-runtime/runtime-benchmarks",
   "xcm-builder/runtime-benchmarks",
@@ -179,5 +195,10 @@ try-runtime = [
   "pallet-utility/try-runtime",
   "pallet-xcm/try-runtime",
   "pallet-uniques/try-runtime",
+  "pallet-contracts/try-runtime",
+  "pallet-treasury/try-runtime",
+  "pallet-insecure-randomness-collective-flip/try-runtime",
+  "pallet-bounties/try-runtime",
+  "pallet-child-bounties/try-runtime",
   "parachain-info/try-runtime",
 ]
