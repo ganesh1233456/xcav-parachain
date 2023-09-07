@@ -59,6 +59,7 @@ pallet-bounties = { git = "https://github.com/paritytech/substrate", default-fea
 pallet-child-bounties = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-staking = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-staking-reward-curve = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+pallet-staking-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-election-provider-multi-phase = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-bags-list = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-nomination-pools = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
@@ -145,6 +146,7 @@ std = [
   "pallet-bags-list/std",
   "pallet-nomination-pools/std",
   "pallet-multisig/std",
+  "pallet-staking-runtime-api/std",
   "parachain-info/std",
   "polkadot-parachain/std",
   "polkadot-runtime-common/std",
