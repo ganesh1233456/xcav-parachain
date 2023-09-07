@@ -19,11 +19,11 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
   "derive",
 ] }
 hex-literal = { version = "0.4.1", optional = true }
-log = { version = "0.4.17", default-features = false }
-scale-info = { version = "2.5.0", default-features = false, features = [
+log = { version = "0.4.20", default-features = false }
+scale-info = { version = "2.9.0", default-features = false, features = [
   "derive",
 ] }
-smallvec = "1.10.0"
+smallvec = "1.11.0"
 
 # Local
 pallet-motion = { path = "../../pallets/motion", default-features = false }
@@ -62,6 +62,7 @@ pallet-staking-reward-curve = { git = "https://github.com/paritytech/substrate",
 pallet-election-provider-multi-phase = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-bags-list = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-nomination-pools = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
@@ -76,14 +77,15 @@ sp-version = { git = "https://github.com/paritytech/substrate", default-features
 sp-staking = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 
 # Polkadot
-pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.42" }
-polkadot-parachain = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.42" }
-polkadot-runtime-common = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.42" }
-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.42" }
-xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.42" }
-xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.42" }
+pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
+polkadot-parachain = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
+polkadot-runtime-common = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
+xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
+xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
+xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v1.0.0" }
 
 # Cumulus
+assets-common = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v1.0.0", default-features = false }
 cumulus-pallet-aura-ext = { git = "https://github.com/paritytech/cumulus.git", branch = "polkadot-v1.0.0", default-features = false }
 cumulus-pallet-dmp-queue = { git = "https://github.com/paritytech/cumulus.git", branch = "polkadot-v1.0.0", default-features = false }
 cumulus-pallet-parachain-system = { git = "https://github.com/paritytech/cumulus.git", branch = "polkadot-v1.0.0", default-features = false }
@@ -111,6 +113,7 @@ std = [
   "cumulus-primitives-core/std",
   "cumulus-primitives-timestamp/std",
   "cumulus-primitives-utility/std",
+  "assets-common/std",
   "frame-executive/std",
   "frame-support/std",
   "frame-system-rpc-runtime-api/std",
@@ -141,6 +144,7 @@ std = [
   "pallet-election-provider-multi-phase/std",
   "pallet-bags-list/std",
   "pallet-nomination-pools/std",
+  "pallet-multisig/std",
   "parachain-info/std",
   "polkadot-parachain/std",
   "polkadot-runtime-common/std",
@@ -186,11 +190,13 @@ runtime-benchmarks = [
   "pallet-election-provider-multi-phase/runtime-benchmarks",
   "pallet-bags-list/runtime-benchmarks",
   "pallet-nomination-pools/runtime-benchmarks",
+  "pallet-multisig/runtime-benchmarks",
   "sp-runtime/runtime-benchmarks",
   "sp-staking/runtime-benchmarks",
   "xcm-builder/runtime-benchmarks",
   "cumulus-pallet-session-benchmarking/runtime-benchmarks",
   "cumulus-pallet-xcmp-queue/runtime-benchmarks",
+  "assets-common/runtime-benchmarks",
 ]
 
 try-runtime = [
@@ -226,5 +232,6 @@ try-runtime = [
   "pallet-election-provider-multi-phase/try-runtime",
   "pallet-bags-list/try-runtime",
   "pallet-nomination-pools/try-runtime",
+  "pallet-multisig/try-runtime",
   "parachain-info/try-runtime",
 ]
