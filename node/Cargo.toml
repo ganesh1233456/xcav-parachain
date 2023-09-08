@@ -10,11 +10,13 @@ repository = "https://github.com/paritytech/extended-parachain-template/"
 version = "0.9.420"
 
 [dependencies]
+futures = "0.3.28"
 clap = { version = "4.2.3", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.0.0" }
 jsonrpsee = { version = "0.16.2", features = ["server"] }
 log = "0.4.17"
 serde = { version = "1.0.160", features = ["derive"] }
+serde_json = "1.0.85"
 color-print = "0.3.4"
 rand = "0.8"
 # Local
@@ -35,6 +37,7 @@ sc-executor = { git = "https://github.com/paritytech/substrate", branch = "polka
 sc-network = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 sc-network-sync = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
+sc-offchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 sc-sysinfo = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 sc-telemetry = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }

@@ -17,7 +17,7 @@ use constants::time::*;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use sp_api::impl_runtime_apis;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata, ConstBool};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, Convert},
@@ -40,7 +40,7 @@ use frame_support::{
 	weights::{ConstantMultiplier, Weight},
 	PalletId,
 };
-use frame_election_provider_support::{onchain, VoteWeight, SequentialPhragmen};
+use frame_election_provider_support::{onchain, VoteWeight, SequentialPhragmen, ElectionDataProvider};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -288,6 +288,9 @@ impl frame_system::Config for Runtime {
 	type Hash = Hash;
 	/// The hashing algorithm used.
 	type Hashing = BlakeTwo256;
+	/// This stores the number of previous transactions associated with a sender account.
+	type Nonce = Nonce;
+	type Block = Block;
 	/// The header type.
 	// type Header = generic::Header<BlockNumber, BlakeTwo256>;
 	/// The ubiquitous event type.
@@ -354,6 +357,7 @@ impl pallet_balances::Config for Runtime {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type MaxReserves = ConstU32<50>;
+	type RuntimeHoldReason = ();
 	type MaxHolds = ConstU32<0>;
 	type MaxFreezes = ConstU32<0>;
 	// type HoldIdentifier = ();
@@ -483,6 +487,7 @@ impl pallet_session::historical::Config for Runtime {
 impl pallet_sudo::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
+	type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
@@ -521,6 +526,7 @@ impl pallet_aura::Config for Runtime {
 	type AuthorityId = AuraId;
 	type DisabledValidators = ();
 	type MaxAuthorities = ConstU32<100_000>;
+	type AllowMultipleBlocksPerSlot = ConstBool<false>;
 }
 
 parameter_types! {
@@ -529,6 +535,7 @@ parameter_types! {
 	pub const MinCandidates: u32 = 5;
 	pub const SessionLength: BlockNumber = 6 * HOURS;
 	pub const MaxInvulnerables: u32 = 100;
+	pub const MinEligibleCollators: u32 = 5;
 	// StakingAdmin pluralistic body.
 	pub const StakingAdminBodyId: BodyId = BodyId::Defense;
 }
@@ -547,6 +554,7 @@ impl pallet_collator_selection::Config for Runtime {
 	type MaxCandidates = MaxCandidates;
 	// type MinCandidates = MinCandidates;
 	type MaxInvulnerables = MaxInvulnerables;
+	type MinEligibleCollators = MinEligibleCollators;
 	// should be a multiple of session or things will get inconsistent
 	type KickThreshold = Period;
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
@@ -754,6 +762,7 @@ impl pallet_staking::Config for Runtime {
 	type SessionsPerEra = SessionsPerEra;
 	type BondingDuration = BondingDuration;
 	type SlashDeferDuration = SlashDeferDuration;
+	type EventListeners = NominationPools;
 	type SessionInterface = Self;
 	type AdminOrigin = frame_system::EnsureRoot<Self::AccountId>;
 	type EraPayout = pallet_staking::ConvertCurve<RewardCurve>;
@@ -843,16 +852,23 @@ impl onchain::Config for OnChainSeqPhragmen {
 }
 
 pub struct SubmitMinerConfig;
-impl pallet_election_provider_multi_phase::MinerConfig for SubmitMinerConfig {
+impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
 	type AccountId = AccountId;
 	type MaxLength = MinerMaxLength;
 	type MaxWeight = MinerMaxWeight;
-	type MaxVotesPerVoter = MaxNominations;
 	type Solution = NposSolution16;
+	type MaxVotesPerVoter =
+	<<Self as pallet_election_provider_multi_phase::Config>::DataProvider as ElectionDataProvider>::MaxVotesPerVoter;
 	type MaxWinners = MaxActiveValidators;
 
-	fn solution_weight(_v: u32, _t: u32, _a: u32, _d: u32) -> Weight {
-		Weight::from_ref_time(0)
+	// The unsigned submissions have to respect the weight of the submit_unsigned call, thus their
+	// weight estimate function is wired to this call's weight.
+	fn solution_weight(v: u32, t: u32, a: u32, d: u32) -> Weight {
+		<
+			<Self as pallet_election_provider_multi_phase::Config>::WeightInfo
+			as
+			pallet_election_provider_multi_phase::WeightInfo
+		>::submit_unsigned(v, t, a, d)
 	}
 }
 
@@ -887,7 +903,8 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type UnsignedPhase = UnsignedPhase;
 	type BetterUnsignedThreshold = BetterUnsignedThreshold;
 	type BetterSignedThreshold = ();
-	type MinerConfig = SubmitMinerConfig;
+	// type MinerConfig = SubmitMinerConfig;
+	type MinerConfig = Self;
 	type OffchainRepeat = OffchainRepeat;
 	type MinerTxPriority = MultiPhaseUnsignedPriority;
 	type SignedMaxSubmissions = ConstU32<10>;
@@ -1054,7 +1071,9 @@ impl_runtime_apis! {
 				gas_limit,
 				storage_deposit_limit,
 				input_data,
-				contracts::CONTRACTS_DEBUG_OUTPUT,
+				// contracts::CONTRACTS_DEBUG_OUTPUT,
+				pallet_contracts::DebugInfo::UnsafeDebug,
+				pallet_contracts::CollectEvents::UnsafeCollect,
 				pallet_contracts::Determinism::Enforced,
 			)
 		}
@@ -1077,7 +1096,9 @@ impl_runtime_apis! {
 				code,
 				data,
 				salt,
-				contracts::CONTRACTS_DEBUG_OUTPUT,
+				// contracts::CONTRACTS_DEBUG_OUTPUT,
+				pallet_contracts::DebugInfo::UnsafeDebug,
+				pallet_contracts::CollectEvents::UnsafeCollect,
 			)
 		}
 
