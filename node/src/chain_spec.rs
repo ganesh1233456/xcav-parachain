@@ -11,10 +11,10 @@ use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type MainChainSpec = sc_service::GenericChainSpec<mainnet_runtime::GenesisConfig, Extensions>;
+pub type MainChainSpec = sc_service::GenericChainSpec<mainnet_runtime::RuntimeGenesisConfig, Extensions>;
 
 /// Specialized `ChainSpec` for the development parachain runtime.
-pub type DevnetChainSpec = sc_service::GenericChainSpec<devnet_runtime::GenesisConfig, Extensions>;
+pub type DevnetChainSpec = sc_service::GenericChainSpec<devnet_runtime::RuntimeGenesisConfig, Extensions>;
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
@@ -224,7 +224,7 @@ pub mod devnet {
 		endowed_accounts: Vec<AccountId>,
 		root_key: Option<AccountId>,
 		id: ParaId,
-	) -> devnet_runtime::GenesisConfig {
+	) -> devnet_runtime::RuntimeGenesisConfig {
 		use devnet_runtime::EXISTENTIAL_DEPOSIT;
 		let alice = get_from_seed::<sr25519::Public>("Alice");
 		let bob = get_from_seed::<sr25519::Public>("Bob");
@@ -252,7 +252,7 @@ pub mod devnet {
 		const ENDOWMENT: devnet_runtime::Balance = 10_000_000 * DOLLARS;
 		const STASH: devnet_runtime::Balance = ENDOWMENT / 1000;
 
-		devnet_runtime::GenesisConfig {
+		devnet_runtime::RuntimeGenesisConfig {
 			system: devnet_runtime::SystemConfig {
 				code: devnet_runtime::WASM_BINARY
 					.expect("WASM binary was not build, please build it!")
@@ -455,12 +455,12 @@ pub mod mainnet {
 		endowed_accounts: Vec<AccountId>,
 		root_key: Option<AccountId>,
 		id: ParaId,
-	) -> mainnet_runtime::GenesisConfig {
+	) -> mainnet_runtime::RuntimeGenesisConfig {
 		use mainnet_runtime::EXISTENTIAL_DEPOSIT;
 		let alice = get_from_seed::<sr25519::Public>("Alice");
 		let bob = get_from_seed::<sr25519::Public>("Bob");
 
-		mainnet_runtime::GenesisConfig {
+		mainnet_runtime::RuntimeGenesisConfig {
 			system: mainnet_runtime::SystemConfig {
 				code: mainnet_runtime::WASM_BINARY
 					.expect("WASM binary was not build, please build it!")
