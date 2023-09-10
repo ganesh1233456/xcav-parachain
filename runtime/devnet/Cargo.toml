@@ -62,6 +62,7 @@ pallet-staking-reward-curve = { git = "https://github.com/paritytech/substrate",
 pallet-election-provider-multi-phase = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-bags-list = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-nomination-pools = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
@@ -143,6 +144,7 @@ std = [
   "pallet-election-provider-multi-phase/std",
   "pallet-bags-list/std",
   "pallet-nomination-pools/std",
+  "pallet-multisig/std",
   "parachain-info/std",
   "polkadot-parachain/std",
   "polkadot-runtime-common/std",
@@ -188,6 +190,7 @@ runtime-benchmarks = [
   "pallet-election-provider-multi-phase/runtime-benchmarks",
   "pallet-bags-list/runtime-benchmarks",
   "pallet-nomination-pools/runtime-benchmarks",
+  "pallet-multisig/runtime-benchmarks",
   "sp-runtime/runtime-benchmarks",
   "sp-staking/runtime-benchmarks",
   "xcm-builder/runtime-benchmarks",
@@ -229,5 +232,6 @@ try-runtime = [
   "pallet-election-provider-multi-phase/try-runtime",
   "pallet-bags-list/try-runtime",
   "pallet-nomination-pools/try-runtime",
+  "pallet-multisig/try-runtime",
   "parachain-info/try-runtime",
 ]
