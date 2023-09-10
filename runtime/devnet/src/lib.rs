@@ -962,6 +962,23 @@ parameter_types! {
 	  type MaxPointsToBalance = MaxPointsToBalance;
   }
 
+  parameter_types! {
+	// One storage item; key size is 32; value is size 4+4+16+32 bytes = 56 bytes.
+	pub const DepositBase: Balance = deposit(1, 88);
+	// Additional storage item size of 32 bytes.
+	pub const DepositFactor: Balance = deposit(0, 32);
+}
+
+impl pallet_multisig::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = Balances;
+	type DepositBase = DepositBase;
+	type DepositFactor = DepositFactor;
+	type MaxSignatories = ConstU32<100>;
+	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub struct Runtime
@@ -1012,6 +1029,7 @@ construct_runtime!(
 		NominationPools: pallet_nomination_pools::{Pallet, Call, Storage, Event<T>},
 		Staking: pallet_staking::{Pallet, Call, Config<T>, Storage, Event<T>},
 		BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>},
+		Multisig: pallet_multisig = 5,
 	}
 );
 
@@ -1037,6 +1055,7 @@ mod benches {
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
 		[pallet_election_provider_multi_phase, ElectionProviderMultiPhase]
 		[pallet_bags_list, VoterList]
+		[pallet_multisig, Multisig]
 	);
 }
 
