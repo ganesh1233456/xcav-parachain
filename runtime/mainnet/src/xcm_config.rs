@@ -270,7 +270,7 @@ impl pallet_xcm::Config for Runtime {
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	// No teleportation is allowed.
 	type XcmTeleportFilter = Nothing;
-	// No teleportation is allowed.
+	// All reserve transfers are allowed.
 	type XcmReserveTransferFilter = Everything;
 	// Use (conservative) bounds on estimating XCM execution on this chain.
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
