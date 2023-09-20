@@ -7088,6 +7088,7 @@ dependencies = [
  "log",
  "mainnet-runtime",
  "pallet-im-online",
+ "pallet-multisig",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
  "polkadot-cli",
