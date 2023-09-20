@@ -28,6 +28,9 @@ smallvec = "1.10.0"
 # Local
 pallet-motion = { path = "../../pallets/motion", default-features = false }
 runtime-common = { path = "../common", default-features = false }
+pallet-community-loan-pool = { git = "https://github.com/XcavateBlockchain/Xcavate_Node", default-features = false }
+pallet-xcavate-staking = { git = "https://github.com/XcavateBlockchain/Xcavate_Node", default-features = false }
+
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true, branch = "polkadot-v1.0.0" }
@@ -65,6 +68,8 @@ pallet-nomination-pools = { git = "https://github.com/paritytech/substrate", def
 pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-scheduler = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 pallet-preimage = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+pallet-nfts = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+pallet-nfts-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
@@ -136,6 +141,8 @@ std = [
   "pallet-utility/std",
   "pallet-xcm/std",
   "pallet-uniques/std",
+  "pallet-nfts/std",
+	"pallet-nfts-runtime-api/std",
   "pallet-contracts/std",
   "pallet-contracts-primitives/std",
   "pallet-treasury/std",
@@ -149,6 +156,8 @@ std = [
   "pallet-multisig/std",
   "pallet-scheduler/std",
   "pallet-preimage/std",
+  "pallet-community-loan-pool/std",
+  "pallet-xcavate-staking/std",
   "parachain-info/std",
   "polkadot-parachain/std",
   "polkadot-runtime-common/std",
@@ -197,6 +206,8 @@ runtime-benchmarks = [
   "pallet-multisig/runtime-benchmarks",
   "pallet-scheduler/runtime-benchmarks",
   "pallet-preimage/runtime-benchmarks",
+  "pallet-community-loan-pool/runtime-benchmarks",
+  "pallet-nfts/runtime-benchmarks",
   "sp-runtime/runtime-benchmarks",
   "sp-staking/runtime-benchmarks",
   "xcm-builder/runtime-benchmarks",
@@ -241,5 +252,6 @@ try-runtime = [
   "pallet-multisig/try-runtime",
   "pallet-scheduler/try-runtime",
   "pallet-preimage/try-runtime",
+  "pallet-nfts/try-runtime",
   "parachain-info/try-runtime",
 ]
