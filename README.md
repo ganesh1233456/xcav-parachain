@@ -78,4 +78,8 @@ parathreads [here](https://wiki.polkadot.network/docs/learn-parathreads).
 🧙 Learn about how to use this template and run your own parachain testnet for it in the
 [Devhub Cumulus Tutorial](https://docs.substrate.io/tutorials/v3/cumulus/start-relay/).
 
+## 🏛 Governance
+
+Parachain governance is a very crucial topic that goes beyond using `sudo` for privileged calls. [Read our Governance Explainer here](./docs/governance.md)
+
 <!-- 4285 -->

@@ -63,6 +63,7 @@ substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", 
 substrate-prometheus-endpoint = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 try-runtime-cli = { git = "https://github.com/paritytech/substrate", optional = true, branch = "polkadot-v1.0.0" }
 pallet-im-online = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
+pallet-multisig = { default-features = false, git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
 
 # Polkadot
 polkadot-cli = { git = "https://github.com/paritytech/polkadot", features = [

@@ -21,8 +21,10 @@ use xcm_builder::{
 	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, TrailingSetTopicAsId,
 	UsingComponents, WithComputedOrigin, WithUniqueTopic,
 };
-use xcm_executor::traits::Properties;
-use xcm_executor::{traits::ShouldExecute, XcmExecutor};
+use xcm_executor::{
+	traits::{Properties, ShouldExecute},
+	XcmExecutor,
+};
 
 parameter_types! {
 	pub const RelayLocation: MultiLocation = MultiLocation::parent();
@@ -159,11 +161,11 @@ impl ShouldExecute for DenyReserveTransferToRelayChain {
 				InitiateReserveWithdraw {
 					reserve: MultiLocation { parents: 1, interior: Here },
 					..
-				}
-				| DepositReserveAsset {
+				} |
+				DepositReserveAsset {
 					dest: MultiLocation { parents: 1, interior: Here }, ..
-				}
-				| TransferReserveAsset {
+				} |
+				TransferReserveAsset {
 					dest: MultiLocation { parents: 1, interior: Here }, ..
 				} => {
 					Err(ProcessMessageError::Unsupported) // Deny
@@ -220,8 +222,9 @@ impl xcm_executor::Config for XcmConfig {
 	type UniversalLocation = UniversalLocation;
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
-	type Trader =
-		UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, ToAuthor<Runtime>>;
+
+	type Trader = UsingComponents<WeightToFee, SelfReserve, AccountId, Balances, ToAuthor<Runtime>>;
+
 	type ResponseHandler = PolkadotXcm;
 	type AssetTrap = PolkadotXcm;
 	type AssetLocker = ();
@@ -270,7 +273,7 @@ impl pallet_xcm::Config for Runtime {
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	// No teleportation is allowed.
 	type XcmTeleportFilter = Nothing;
-	// No teleportation is allowed.
+	// All reserve transfers are allowed
 	type XcmReserveTransferFilter = Everything;
 	// Use (conservative) bounds on estimating XCM execution on this chain.
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
