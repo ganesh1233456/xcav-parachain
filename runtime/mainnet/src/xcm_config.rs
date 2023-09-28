@@ -4,13 +4,13 @@ use super::{
 };
 use core::{marker::PhantomData, ops::ControlFlow};
 use frame_support::{
-	log, match_types, parameter_types,
+	match_types, parameter_types,
 	traits::{ConstU32, Everything, Nothing, PalletInfoAccess, ProcessMessageError},
 	weights::Weight,
 };
 use frame_system::EnsureRoot;
 use pallet_xcm::XcmPassthrough;
-use polkadot_parachain::primitives::Sibling;
+use polkadot_parachain_primitives::primitives::Sibling;
 use polkadot_runtime_common::impls::ToAuthor;
 use xcm::latest::prelude::*;
 use xcm_builder::{
@@ -214,9 +214,9 @@ impl xcm_executor::Config for XcmConfig {
 	type AssetTransactor = AssetTransactors;
 	type OriginConverter = XcmOriginToTransactDispatchOrigin;
 	type IsReserve = NativeAsset;
+	// Teleporting is disabled.
 	type IsTeleporter = ();
 	type Aliasers = Nothing;
-	// Teleporting is disabled.
 	type UniversalLocation = UniversalLocation;
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
@@ -264,8 +264,6 @@ impl pallet_xcm::Config for Runtime {
 	// Disable dispatchable execute on the XCM pallet.
 	// NOTE: This needs to be `Everything` for local testing.
 	type XcmExecuteFilter = Nothing;
-	// Disable dispatchable execute on the XCM pallet.
-	// Needs to be `Everything` for local testing.
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	// No teleportation is allowed.
 	type XcmTeleportFilter = Nothing;

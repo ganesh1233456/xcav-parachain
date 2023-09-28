@@ -9,7 +9,7 @@ source ~/.cargo/env
 Ubuntu: 
 ```sh
 sudo apt update
-sudo apt install -y cmake pkg-config libssl-dev git gcc build-essential git clang libclang-dev
+sudo apt install -y cmake pkg-config libssl-dev git gcc build-essential git clang libclang-dev protobuf-compiler
 ```
 Arch Linux:
 ```sh
@@ -23,7 +23,7 @@ brew update
 brew install openssl cmake llvm
 ```
 
-- ### Install the `wasm` target and the `nightly` toolchain for rust
+- ### Install the `wasm` target for your rust toolchain
 
 ```sh
 rustup update nightly

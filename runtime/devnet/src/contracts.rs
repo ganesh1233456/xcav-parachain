@@ -29,6 +29,7 @@ use crate::{
 	constants::currency::deposit, Balance, Balances, RandomnessCollectiveFlip, Runtime,
 	RuntimeCall, RuntimeEvent, Timestamp,
 };
+pub use sp_runtime::Perbill;
 
 // Prints debug output of the `contracts` pallet to stdout if the node is
 // started with `-lruntime::contracts=debug`.
@@ -39,6 +40,7 @@ parameter_types! {
 	pub const DepositPerByte: Balance = deposit(0, 1);
 	pub MySchedule: Schedule<Runtime> = Default::default();
 	pub const DefaultDepositLimit: Balance = deposit(1024, 1024 * 1024);
+	pub CodeHashLockupDepositPercent: Perbill = Perbill::from_percent(30);
 }
 
 impl Config for Runtime {
@@ -67,6 +69,13 @@ impl Config for Runtime {
 	type MaxStorageKeyLen = ConstU32<128>;
 	type UnsafeUnstableInterface = ConstBool<false>;
 	type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
+
+	type CodeHashLockupDepositPercent = CodeHashLockupDepositPercent;
+	type MaxDelegateDependencies = ConstU32<32>;
+	type RuntimeHoldReason = RuntimeHoldReason;
+	type Debug = ();
+	type Environment = ();
+
 	#[cfg(not(feature = "runtime-benchmarks"))]
 	type Migrations = ();
 	#[cfg(feature = "runtime-benchmarks")]

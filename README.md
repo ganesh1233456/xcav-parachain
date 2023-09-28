@@ -26,7 +26,7 @@ Use the following command to build the node without launching it:
 cargo build --release
 ```
 
-Next you will need a compatible release of [Polkadot](https://github.com/paritytech/polkadot) to run a testnet. You may also want to use [Zombienet (available for Linux and MacOS)](https://github.com/paritytech/zombienet/releases) for spinning up a testnet:
+Next you will need a compatible release of [Polkadot](https://github.com/paritytech/polkadot-sdk) to run a testnet. You may also want to use [Zombienet (available for Linux and MacOS)](https://github.com/paritytech/zombienet/releases) for spinning up a testnet: 
 
 You can find linux and macOS executables of the Zombienet CLI here:
 
