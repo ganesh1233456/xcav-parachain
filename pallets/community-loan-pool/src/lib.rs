@@ -50,8 +50,8 @@ pub type PositiveImbalanceOf<T> = <<T as Config>::Currency as Currency<
 pub type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-type BalanceOf1<T> =
-	<<T as pallet_contracts::Config>::Currency as frame_support::traits::fungible::Inspect<<T as frame_system::Config>::AccountId>>::Balance;
+/* type BalanceOf1<T> =
+	<<T as pallet_contracts::Config>::Currency as frame_support::traits::fungible::Inspect<<T as frame_system::Config>::AccountId>>::Balance; */
 
 // type BalanceOf1<T> = <<T as pallet_contracts::Config>::Currency as Currency<
 // 	<T as frame_system::Config>::AccountId,
@@ -138,7 +138,7 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config:
-		frame_system::Config + pallet_uniques::Config + pallet_contracts::Config
+		frame_system::Config + pallet_uniques::Config
 	{
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -440,12 +440,12 @@ pub mod pallet {
 			proposal_index: ProposalIndex,
 			collection_id: T::CollectionId,
 			collateral_price: BalanceOf<T>,
-			value_funds: BalanceOf1<T>,
+			//value_funds: BalanceOf1<T>,
 			item_id: T::ItemId,
 			loan_apy: LoanApy,
 			dest: T::AccountId,
 			admin: T::AccountId,
-			storage_deposit_limit: Option<BalanceOf1<T>>,
+			//storage_deposit_limit: Option<BalanceOf1<T>>,
 			gas_limit: Weight,
 		) -> DispatchResult {
 			let _signer = ensure_signed(origin.clone())?;
@@ -514,7 +514,7 @@ pub mod pallet {
 			data.append(&mut arg6_enc);
 
 			// Calls the creat loan function of the loan smart contract
-			pallet_contracts::Pallet::<T>::bare_call(
+/* 			pallet_contracts::Pallet::<T>::bare_call(
 				palled_id,
 				dest.clone(),
 				value_funds,
@@ -526,7 +526,7 @@ pub mod pallet {
 				pallet_contracts::Determinism::Enforced,
 //			pallet_contracts::Determinism::Deterministic,
 			)
-			.result?;
+			.result?; */
 			let new_value = Self::total_loan_amount() + Self::balance_to_u64(value).unwrap();
 			TotalLoanAmount::<T>::put(new_value);
 			Proposals::<T>::remove(proposal_index);
@@ -672,7 +672,7 @@ pub mod pallet {
 				let dest = loan.contract_account_id;
 				let palled_id = Self::account_id();
 				let gas_limit: Weight = Weight::from_parts(5000000000, 5000000000);
-				let value: BalanceOf1<T> = Default::default();
+				//let value: BalanceOf1<T> = Default::default();
 				let mut arg1_enc: Vec<u8> = loan_index.encode();
 				let mut arg2_enc: Vec<u8> = interest_balance.encode();
 				let mut data = Vec::new();
@@ -680,7 +680,7 @@ pub mod pallet {
 				data.append(&mut selector);
 				data.append(&mut arg1_enc);
 				data.append(&mut arg2_enc);
-				pallet_contracts::Pallet::<T>::bare_call(
+/* 				pallet_contracts::Pallet::<T>::bare_call(
 					palled_id.clone(),
 					dest.clone(),
 					value,
@@ -692,7 +692,7 @@ pub mod pallet {
 					pallet_contracts::Determinism::Enforced,
 //					pallet_contracts::Determinism::Deterministic,
 				)
-				.result?;
+				.result?; */
 				Self::deposit_event(Event::<T>::ApyCharged { loan_index });
 			}
 			Ok(())

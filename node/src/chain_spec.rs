@@ -365,6 +365,7 @@ pub mod devnet {
 				..Default::default()
 			},
 			transaction_payment: Default::default(),
+			community_loan_pool: Default::default(),
 		}
 	}
 }

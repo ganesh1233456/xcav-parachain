@@ -25,8 +25,6 @@ smallvec = "1.10.0"
 
 # Local
 pallet-motion = { path = "../../pallets/motion", default-features = false }
-pallet-community-loan-pool = {  default-features = false, path = "../../pallets/community-loan-pool" }
-pallet-xcavate-staking = {  default-features = false, path = "../../pallets/xcavate-staking" }
 runtime-common = { path = "../common", default-features = false }
 
 # Substrate
@@ -113,8 +111,6 @@ std = [
   "pallet-collective/std",
   "pallet-collator-selection/std",
   "pallet-motion/std",
-  "pallet-community-loan-pool/std",
-	"pallet-xcavate-staking/std",
   "pallet-session/std",
   "pallet-sudo/std",
   "pallet-timestamp/std",
@@ -156,8 +152,6 @@ runtime-benchmarks = [
   "pallet-collator-selection/runtime-benchmarks",
   "pallet-collective/runtime-benchmarks",
   "pallet-motion/runtime-benchmarks",
-  "pallet-community-loan-pool/runtime-benchmarks",
-  "pallet-timestamp/runtime-benchmarks",
   "pallet-timestamp/runtime-benchmarks",
   "pallet-utility/runtime-benchmarks",
   "pallet-xcm/runtime-benchmarks",
@@ -187,8 +181,6 @@ try-runtime = [
   "pallet-collator-selection/try-runtime",
   "pallet-collective/try-runtime",
   "pallet-motion/try-runtime",
-  "pallet-community-loan-pool/try-runtime",
-  "pallet-xcavate-staking/try-runtime",
   "pallet-session/try-runtime",
   "pallet-sudo/try-runtime",
   "pallet-timestamp/try-runtime",

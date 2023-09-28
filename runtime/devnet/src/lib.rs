@@ -1123,6 +1123,8 @@ construct_runtime!(
 		Sudo: pallet_sudo = 15,
 		Council: pallet_collective::<Instance1> = 16,
 		Motion: pallet_motion = 17,
+		CommunityLoanPool: pallet_community_loan_pool = 18,
+		XcavateStaking: pallet_xcavate_staking = 19,
 
 		// Collator support. The order of these 4 are important and shall not change.
 		Authorship: pallet_authorship = 20,
@@ -1148,8 +1150,6 @@ construct_runtime!(
 		Bounties: pallet_bounties,
 		ChildBounties: pallet_child_bounties,
 		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
-		CommunityLoanPool: pallet_community_loan_pool,
-		XcavateStaking: pallet_xcavate_staking,
 		NominationPools: pallet_nomination_pools::{Pallet, Call, Storage, Event<T>},
 		Staking: pallet_staking::{Pallet, Call, Config<T>, Storage, Event<T>},
 		BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>},

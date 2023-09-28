@@ -44,9 +44,6 @@ pub use runtime_common::{
 };
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 pub use sp_runtime::{MultiAddress, Perbill, Permill};
-pub const MILLICENTS: Balance = 1_000_000_000;
-pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
-pub const DOLLARS: Balance = 100 * CENTS;
 use xcm_config::{RelayLocation, XcmConfig, XcmOriginToTransactDispatchOrigin};
 
 #[cfg(any(feature = "std", test))]
@@ -544,59 +541,6 @@ impl pallet_motion::Config for Runtime {
 }
 
 parameter_types! {
-	pub const CommunityLoanPalletId: PalletId = PalletId(*b"py/loana");
-	pub const MaxLoans: u32 = 10000;
-	pub const VotingTime: BlockNumber = 20;
-	pub const MaximumCommitteeMembers: u32 = 10;
-	pub const ProposalBond: Permill = Permill::from_percent(5);
-	pub const ProposalBondMinimum: Balance = DOLLARS;
-}
-
-/// Configure the pallet-community-loan-pool in pallets/community-loan-pool.
-impl pallet_community_loan_pool::Config for Runtime {
-	type PalletId = CommunityLoanPalletId;
-	type Currency = Balances;
-	type ApproveOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
-	>;
-	type RejectOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
-	>;
-	type CommitteeOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
-	>;
-	type RuntimeEvent = RuntimeEvent;
-	type ProposalBond = ProposalBond;
-	type ProposalBondMinimum = ProposalBondMinimum;
-	type ProposalBondMaximum = ();
-	type OnSlash = ();
-	type MaxOngoingLoans = MaxLoans;
-	type TimeProvider = Timestamp;
-	type WeightInfo = pallet_community_loan_pool::weights::SubstrateWeight<Runtime>;
-	#[cfg(feature = "runtime-benchmarks")]
-	type Helper = pallet_nft::NftHelper;
-	type VotingTime = VotingTime;
-	type MaxCommitteeMembers = MaximumCommitteeMembers;
-}
-
-parameter_types! {
-	pub const MinimumRemainingAmount: Balance = DOLLARS;
-	pub const MaxStaker: u32 = 10000;
-}
-
-/// Configure the pallet-xcavate-staking in pallets/xcavate-staking.
-impl pallet_xcavate_staking::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = Balances;
-	type MinimumRemainingAmount = MinimumRemainingAmount;
-	type MaxStakers = MaxStaker;
-	type TimeProvider = Timestamp;
-}
-
-parameter_types! {
 	// One storage item; key size is 32; value is size 4+4+16+32 bytes = 56 bytes.
 	pub const DepositBase: Balance = deposit(1, 88);
 	// Additional storage item size of 32 bytes.
@@ -703,10 +647,6 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm = 31,
 		CumulusXcm: cumulus_pallet_xcm = 32,
 		DmpQueue: cumulus_pallet_dmp_queue = 33,
-
-		// Custom
-		CommunityLoanPool: pallet_community_loan_pool = 34,
-		XcavateStaking: pallet_xcavate_staking = 35,
 	}
 );
 
@@ -724,7 +664,6 @@ mod benches {
 		[pallet_preimage, Preimage]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
 		[pallet_motion, Motion]
-		[pallet_community_loan_pool, CommunityLoanPool]
 	);
 }
 
