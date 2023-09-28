@@ -12,7 +12,7 @@ pub use fee::WeightToFee;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use sp_api::impl_runtime_apis;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_core::{crypto::KeyTypeId, ConstBool, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT},
@@ -29,7 +29,7 @@ use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
 	parameter_types,
-	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64,ConstBool, ConstU8, EitherOfDiverse, Everything},
+	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, ConstU8, EitherOfDiverse, Everything},
 	weights::{ConstantMultiplier, Weight},
 	PalletId,
 };
@@ -184,7 +184,10 @@ pub mod fee {
 /// to even the core data structures.
 pub mod opaque {
 	use super::*;
-	use sp_runtime::{generic, traits::BlakeTwo256};
+	use sp_runtime::{
+		generic,
+		traits::{BlakeTwo256, Hash as HashT},
+	};
 
 	pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
 	/// Opaque block header type.
@@ -193,6 +196,8 @@ pub mod opaque {
 	pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 	/// Opaque block identifier type.
 	pub type BlockId = generic::BlockId<Block>;
+	/// Opaque block hash type.
+	pub type Hash = <BlakeTwo256 as HashT>::Output;
 }
 
 impl_opaque_keys! {
@@ -263,30 +268,35 @@ parameter_types! {
 // Configure FRAME pallets to include in runtime.
 
 impl frame_system::Config for Runtime {
-	/// The identifier used to distinguish between accounts.
-	type AccountId = AccountId;
+	/// The ubiquitous event type.
+	type RuntimeEvent = RuntimeEvent;
+	/// The basic call filter to use in dispatchable.
+	type BaseCallFilter = Everything;
+	/// Block & extrinsics weights: base values and limits.
+	type BlockWeights = RuntimeBlockWeights;
+	/// The maximum length of a block (in bytes).
+	type BlockLength = RuntimeBlockLength;
+	/// The ubiquitous origin type.
+	type RuntimeOrigin = RuntimeOrigin;
 	/// The aggregated dispatch type that is available for extrinsics.
 	type RuntimeCall = RuntimeCall;
-	/// The lookup mechanism to get account ID from whatever is passed in dispatchers.
-	type Lookup = AccountIdLookup<AccountId, ()>;
-	/// The index type for storing how many extrinsics an account has signed.
-	// type Index = Index;
-	/// The index type for blocks.
-	// type BlockNumber = BlockNumber;
 	/// This stores the number of previous transactions associated with a sender account.
 	type Nonce = Nonce;
 	/// The type for hashing blocks and tries.
 	type Hash = Hash;
 	/// The hashing algorithm used.
 	type Hashing = BlakeTwo256;
-	/// The header type.
-	// type Header = generic::Header<BlockNumber, BlakeTwo256>;
-	/// The ubiquitous event type.
-	type RuntimeEvent = RuntimeEvent;
-	/// The ubiquitous origin type.
-	type RuntimeOrigin = RuntimeOrigin;
+	/// The identifier used to distinguish between accounts.
+	type AccountId = AccountId;
+	/// The lookup mechanism to get account ID from whatever is passed in dispatchers.
+	type Lookup = AccountIdLookup<AccountId, ()>;
+	/// The Block type used by the runtime. This is used by `construct_runtime` to retrieve the
+	/// extrinsics or other block specific data as needed.
+	type Block = Block;
 	/// Maximum number of block number to block hash mappings to keep (oldest pruned first).
 	type BlockHashCount = BlockHashCount;
+	/// The weight of database operations that the runtime can invoke.
+	type DbWeight = RocksDbWeight;
 	/// Runtime version.
 	type Version = Version;
 	/// Converts a module to an index of this module in the runtime.
@@ -297,19 +307,8 @@ impl frame_system::Config for Runtime {
 	type OnNewAccount = ();
 	/// What to do if an account is fully reaped from the system.
 	type OnKilledAccount = ();
-	/// The weight of database operations that the runtime can invoke.
-	type DbWeight = RocksDbWeight;
-	/// The basic call filter to use in dispatchable.
-	type BaseCallFilter = Everything;
 	/// Weight information for the extrinsics of this pallet.
 	type SystemWeightInfo = ();
-	/// The Block type used by the runtime. This is used by `construct_runtime` to retrieve the
-	/// extrinsics or other block specific data as needed.
-	type Block = Block;
-	/// Block & extrinsics weights: base values and limits.
-	type BlockWeights = RuntimeBlockWeights;
-	/// The maximum length of a block (in bytes).
-	type BlockLength = RuntimeBlockLength;
 	/// This is used as an identifier of the chain. 42 is the generic substrate prefix.
 	type SS58Prefix = SS58Prefix;
 	/// The action to take on a Runtime Upgrade
@@ -339,22 +338,21 @@ parameter_types! {
 }
 
 impl pallet_balances::Config for Runtime {
-	type MaxLocks = ConstU32<50>;
-	/// The type for recording an account's balance.
-	type Balance = Balance;
 	/// The ubiquitous event type.
 	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+	/// The type for recording an account's balance.
+	type Balance = Balance;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
+	type ReserveIdentifier = [u8; 8];
+	type RuntimeHoldReason = ();
+	type FreezeIdentifier = ();
+	type MaxLocks = ConstU32<50>;
 	type MaxReserves = ConstU32<50>;
 	type MaxHolds = ConstU32<0>;
 	type MaxFreezes = ConstU32<0>;
-	type RuntimeHoldReason = ();
-	// type HoldIdentifier = ();
-	type FreezeIdentifier = ();
-	type ReserveIdentifier = [u8; 8];
-	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
@@ -369,11 +367,11 @@ parameter_types! {
 impl pallet_assets::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Balance = Balance;
+	type RemoveItemsLimit = ConstU32<1000>;
 	type AssetId = u32;
-	type AssetIdParameter = codec::Compact<u32>;
+	type AssetIdParameter = parity_scale_codec::Compact<u32>;
 	type Currency = Balances;
 	type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
-	type CallbackHandle = ();
 	type ForceOrigin = EnsureRoot<AccountId>;
 	type AssetDeposit = AssetDeposit;
 	type AssetAccountDeposit = AssetAccountDeposit;
@@ -383,7 +381,7 @@ impl pallet_assets::Config for Runtime {
 	type StringLimit = StringLimit;
 	type Freezer = ();
 	type Extra = ();
-	type RemoveItemsLimit = ConstU32<1000>;
+	type CallbackHandle = ();
 	type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
 	#[cfg(feature = "runtime-benchmarks")]
 	type BenchmarkHelper = ();
@@ -398,10 +396,10 @@ impl pallet_transaction_payment::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type OnChargeTransaction =
 		pallet_transaction_payment::CurrencyAdapter<Balances, DealWithFees<Runtime>>;
+	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightToFee = WeightToFee;
 	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
 	type FeeMultiplierUpdate = SlowAdjustingFeeUpdate<Self>;
-	type OperationalFeeMultiplier = ConstU8<5>;
 }
 
 impl pallet_utility::Config for Runtime {
@@ -417,6 +415,15 @@ parameter_types! {
 	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 }
 
+/// Maximum number of blocks simultaneously accepted by the Runtime, not yet included
+/// into the relay chain.
+const UNINCLUDED_SEGMENT_CAPACITY: u32 = 1;
+/// How many parachain blocks are processed by the relay chain per parent. Limits the
+/// number of blocks authored per slot.
+const BLOCK_PROCESSING_VELOCITY: u32 = 1;
+/// Relay chain slot duration, in milliseconds.
+const RELAY_CHAIN_SLOT_DURATION_MILLIS: u32 = 6000;
+
 impl cumulus_pallet_parachain_system::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type OnSystemEvent = ();
@@ -427,6 +434,12 @@ impl cumulus_pallet_parachain_system::Config for Runtime {
 	type XcmpMessageHandler = XcmpQueue;
 	type ReservedXcmpWeight = ReservedXcmpWeight;
 	type CheckAssociatedRelayNumber = RelayNumberStrictlyIncreases;
+	type ConsensusHook = cumulus_pallet_aura_ext::FixedVelocityConsensusHook<
+		Runtime,
+		RELAY_CHAIN_SLOT_DURATION_MILLIS,
+		BLOCK_PROCESSING_VELOCITY,
+		UNINCLUDED_SEGMENT_CAPACITY,
+	>;
 }
 
 impl parachain_info::Config for Runtime {}
@@ -441,8 +454,8 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = EnsureRoot<AccountId>;
 	type ControllerOrigin = EnsureRoot<AccountId>;
 	type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
-	type WeightInfo = ();
 	type PriceForSiblingDelivery = ();
+	type WeightInfo = ();
 }
 
 impl cumulus_pallet_dmp_queue::Config for Runtime {
@@ -454,6 +467,25 @@ impl cumulus_pallet_dmp_queue::Config for Runtime {
 parameter_types! {
 	pub const Period: u32 = 6 * HOURS;
 	pub const Offset: u32 = 0;
+}
+
+parameter_types! {
+	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
+	RuntimeBlockWeights::get().max_block;
+	pub const NoPreimagePostponement: Option<u32> = Some(10);
+}
+
+impl pallet_scheduler::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeOrigin = RuntimeOrigin;
+	type PalletsOrigin = OriginCaller;
+	type RuntimeCall = RuntimeCall;
+	type MaximumWeight = MaximumSchedulerWeight;
+	type ScheduleOrigin = frame_system::EnsureRoot<AccountId>;
+	type OriginPrivilegeCmp = frame_support::traits::EqualPrivilegeOnly;
+	type MaxScheduledPerBlock = ConstU32<512>;
+	type WeightInfo = pallet_scheduler::weights::SubstrateWeight<Runtime>;
+	type Preimages = Preimage;
 }
 
 impl pallet_session::Config for Runtime {
@@ -485,15 +517,15 @@ parameter_types! {
 type CouncilCollective = pallet_collective::Instance1;
 impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
-	type RuntimeEvent = RuntimeEvent;
 	type Proposal = RuntimeCall;
-	type SetMembersOrigin = EnsureRoot<AccountId>;
+	type RuntimeEvent = RuntimeEvent;
 	type MotionDuration = CouncilMotionDuration;
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type MaxProposalWeight = MaxCollectivesProposalWeight;
 	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type SetMembersOrigin = EnsureRoot<AccountId>;
+	type MaxProposalWeight = MaxCollectivesProposalWeight;
 }
 
 impl pallet_motion::Config for Runtime {
@@ -506,47 +538,6 @@ impl pallet_motion::Config for Runtime {
 	type UnanimousOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 1>;
 	type WeightInfo = pallet_motion::weights::SubstrateWeight<Runtime>;
-}
-
-impl pallet_aura::Config for Runtime {
-	type AuthorityId = AuraId;
-	type DisabledValidators = ();
-	type MaxAuthorities = ConstU32<100_000>;
-	type AllowMultipleBlocksPerSlot = ConstBool<false>;
-}
-
-parameter_types! {
-	pub const PotId: PalletId = PalletId(*b"PotStake");
-	pub const MaxCandidates: u32 = 1000;
-	pub const MinCandidates: u32 = 5;
-	pub const SessionLength: BlockNumber = 6 * HOURS;
-	pub const MaxInvulnerables: u32 = 100;
-	pub const MinEligibleCollators: u32 = 5;
-	// StakingAdmin pluralistic body.
-	pub const StakingAdminBodyId: BodyId = BodyId::Defense;
-}
-
-/// We allow root and the StakingAdmin to execute privileged collator selection operations.
-pub type CollatorSelectionUpdateOrigin = EitherOfDiverse<
-	EnsureRoot<AccountId>,
-	EnsureXcm<IsVoiceOfBody<RelayLocation, StakingAdminBodyId>>,
->;
-
-impl pallet_collator_selection::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = Balances;
-	type UpdateOrigin = CollatorSelectionUpdateOrigin;
-	type PotId = PotId;
-	type MaxCandidates = MaxCandidates;
-	// type MinCandidates = MinCandidates;
-	type MaxInvulnerables = MaxInvulnerables;
-	type MinEligibleCollators = MinEligibleCollators;
-	// should be a multiple of session or things will get inconsistent
-	type KickThreshold = Period;
-	type ValidatorId = <Self as frame_system::Config>::AccountId;
-	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
-	type ValidatorRegistration = Session;
-	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -567,25 +558,6 @@ impl pallet_multisig::Config for Runtime {
 }
 
 parameter_types! {
-	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
-	RuntimeBlockWeights::get().max_block;
-	// pub const NoPreimagePostponement: Option<u32> = Some(10);
-}
-
-impl pallet_scheduler::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type RuntimeOrigin = RuntimeOrigin;
-	type PalletsOrigin = OriginCaller;
-	type RuntimeCall = RuntimeCall;
-	type MaximumWeight = MaximumSchedulerWeight;
-	type ScheduleOrigin = frame_system::EnsureRoot<AccountId>;
-	type OriginPrivilegeCmp = frame_support::traits::EqualPrivilegeOnly;
-	type MaxScheduledPerBlock = ConstU32<512>;
-	type WeightInfo = pallet_scheduler::weights::SubstrateWeight<Runtime>;
-	type Preimages = Preimage;
-}
-
-parameter_types! {
 	pub const PreimageBaseDeposit: Balance = deposit(2, 64);
 	pub const PreimageByteDeposit: Balance = deposit(0, 1);
 }
@@ -599,10 +571,48 @@ impl pallet_preimage::Config for Runtime {
 	type ByteDeposit = PreimageByteDeposit;
 }
 
+impl pallet_aura::Config for Runtime {
+	type AuthorityId = AuraId;
+	type MaxAuthorities = ConstU32<100_000>;
+	type DisabledValidators = ();
+	type AllowMultipleBlocksPerSlot = ConstBool<false>;
+}
+
+parameter_types! {
+	pub const PotId: PalletId = PalletId(*b"PotStake");
+	pub const MaxCandidates: u32 = 1000;
+	pub const MinEligibleCollators: u32 = 5;
+	pub const SessionLength: BlockNumber = 6 * HOURS;
+	pub const MaxInvulnerables: u32 = 100;
+	// StakingAdmin pluralistic body.
+	pub const StakingAdminBodyId: BodyId = BodyId::Defense;
+}
+
+/// We allow root and the StakingAdmin to execute privileged collator selection operations.
+pub type CollatorSelectionUpdateOrigin = EitherOfDiverse<
+	EnsureRoot<AccountId>,
+	EnsureXcm<IsVoiceOfBody<RelayLocation, StakingAdminBodyId>>,
+>;
+
+impl pallet_collator_selection::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type UpdateOrigin = CollatorSelectionUpdateOrigin;
+	type PotId = PotId;
+	type MaxCandidates = MaxCandidates;
+	type MinEligibleCollators = MinEligibleCollators;
+	type MaxInvulnerables = MaxInvulnerables;
+	// should be a multiple of session or things will get inconsistent
+	type KickThreshold = Period;
+	type ValidatorId = <Self as frame_system::Config>::AccountId;
+	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
+	type ValidatorRegistration = Session;
+	type WeightInfo = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
-	pub struct Runtime
-	{
+	pub struct Runtime {
 		// System support stuff.
 		System: frame_system = 0,
 		ParachainSystem: cumulus_pallet_parachain_system = 1,
@@ -637,7 +647,6 @@ construct_runtime!(
 		PolkadotXcm: pallet_xcm = 31,
 		CumulusXcm: cumulus_pallet_xcm = 32,
 		DmpQueue: cumulus_pallet_dmp_queue = 33,
-
 	}
 );
 
@@ -648,14 +657,13 @@ mod benches {
 		[pallet_balances, Balances]
 		[pallet_assets, Assets]
 		[pallet_session, SessionBench::<Runtime>]
+		[pallet_scheduler, Scheduler]
 		[pallet_timestamp, Timestamp]
 		[pallet_collator_selection, CollatorSelection]
-		[cumulus_pallet_xcmp_queue, XcmpQueue]
-		[pallet_motion, Motion]
 		[pallet_multisig, Multisig]
 		[pallet_preimage, Preimage]
-		[pallet_scheduler, Scheduler]
-
+		[cumulus_pallet_xcmp_queue, XcmpQueue]
+		[pallet_motion, Motion]
 	);
 }
 
@@ -834,7 +842,7 @@ impl_runtime_apis! {
 			list_benchmarks!(list, extra);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
-			return (list, storage_info)
+			(list, storage_info)
 		}
 
 		fn dispatch_benchmark(
@@ -861,31 +869,7 @@ impl_runtime_apis! {
 	}
 }
 
-struct CheckInherents;
-
-impl cumulus_pallet_parachain_system::CheckInherents<Block> for CheckInherents {
-	fn check_inherents(
-		block: &Block,
-		relay_state_proof: &cumulus_pallet_parachain_system::RelayChainStateProof,
-	) -> sp_inherents::CheckInherentsResult {
-		let relay_chain_slot = relay_state_proof
-			.read_slot()
-			.expect("Could not read the relay chain slot from the proof");
-
-		let inherent_data =
-			cumulus_primitives_timestamp::InherentDataProvider::from_relay_chain_slot_and_duration(
-				relay_chain_slot,
-				sp_std::time::Duration::from_secs(6),
-			)
-			.create_inherent_data()
-			.expect("Could not create the timestamp inherent data");
-
-		inherent_data.check_extrinsics(block)
-	}
-}
-
 cumulus_pallet_parachain_system::register_validate_block! {
 	Runtime = Runtime,
 	BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
-	CheckInherents = CheckInherents,
 }

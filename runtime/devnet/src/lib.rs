@@ -11,7 +11,7 @@ pub mod xcm_config;
 pub use fee::WeightToFee;
 mod voter_bags;
 pub mod constants;
-mod contracts;
+// mod contracts;
 use constants::currency::*;
 use constants::time::*;
 
@@ -36,11 +36,14 @@ use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
 	parameter_types,
-	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, ConstU8, ConstU16, EitherOfDiverse, Everything},
+	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64, ConstU8, EitherOfDiverse, Everything},
 	weights::{ConstantMultiplier, Weight},
 	PalletId,
 };
-use frame_election_provider_support::{onchain, VoteWeight, SequentialPhragmen, ElectionDataProvider};
+use frame_election_provider_support::{
+	bounds::{ElectionBounds, ElectionBoundsBuilder},
+	onchain, VoteWeight, SequentialPhragmen, ElectionDataProvider
+};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -113,7 +116,7 @@ pub type Executive = frame_executive::Executive<
 	AllPalletsWithSystem,
 >;
 
-pub type Migrations = pallet_contracts::Migration<Runtime>;
+// pub type Migrations = pallet_contracts::Migration<Runtime>;
 
 pub mod fee {
 	use super::{Balance, ExtrinsicBaseWeight, MILLIUNIT};
@@ -195,7 +198,10 @@ pub mod fee {
 /// to even the core data structures.
 pub mod opaque {
 	use super::*;
-	use sp_runtime::{generic, traits::BlakeTwo256};
+	use sp_runtime::{
+		generic,
+		traits::{BlakeTwo256, Hash as HashT},
+	};
 
 	pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
 	/// Opaque block header type.
@@ -204,6 +210,8 @@ pub mod opaque {
 	pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 	/// Opaque block identifier type.
 	pub type BlockId = generic::BlockId<Block>;
+	/// Opaque block hash type.
+	pub type Hash = <BlakeTwo256 as HashT>::Output;
 }
 
 impl_opaque_keys! {
@@ -426,6 +434,15 @@ parameter_types! {
 	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 }
 
+/// Maximum number of blocks simultaneously accepted by the Runtime, not yet included
+/// into the relay chain.
+const UNINCLUDED_SEGMENT_CAPACITY: u32 = 1;
+/// How many parachain blocks are processed by the relay chain per parent. Limits the
+/// number of blocks authored per slot.
+const BLOCK_PROCESSING_VELOCITY: u32 = 1;
+/// Relay chain slot duration, in milliseconds.
+const RELAY_CHAIN_SLOT_DURATION_MILLIS: u32 = 6000;
+
 impl cumulus_pallet_parachain_system::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type OnSystemEvent = ();
@@ -436,6 +453,12 @@ impl cumulus_pallet_parachain_system::Config for Runtime {
 	type XcmpMessageHandler = XcmpQueue;
 	type ReservedXcmpWeight = ReservedXcmpWeight;
 	type CheckAssociatedRelayNumber = RelayNumberStrictlyIncreases;
+	type ConsensusHook = cumulus_pallet_aura_ext::FixedVelocityConsensusHook<
+		Runtime,
+		RELAY_CHAIN_SLOT_DURATION_MILLIS,
+		BLOCK_PROCESSING_VELOCITY,
+		UNINCLUDED_SEGMENT_CAPACITY,
+	>;
 }
 
 impl parachain_info::Config for Runtime {}
@@ -740,7 +763,7 @@ parameter_types! {
 }
 
 /// Upper limit on the number of NPOS nominations.
-// const MAX_QUOTA_NOMINATIONS: u32 = 16;
+const MAX_QUOTA_NOMINATIONS: u32 = 16;
 
 pub struct StakingBenchmarkingConfig;
 impl pallet_staking::BenchmarkingConfig for StakingBenchmarkingConfig {
@@ -749,12 +772,13 @@ impl pallet_staking::BenchmarkingConfig for StakingBenchmarkingConfig {
 }
 
 impl pallet_staking::Config for Runtime {
-	type MaxNominations = MaxNominations;
+	// type MaxNominations = MaxNominations;
 	type Currency = Balances;
 	type CurrencyBalance = Balance;
 	type UnixTime = Timestamp;
 	// type CurrencyToVote = U128CurrencyToVote;
 	type CurrencyToVote = sp_staking::currency_to_vote::U128CurrencyToVote;
+	type NominationsQuota = pallet_staking::FixedNominationsQuota<MAX_QUOTA_NOMINATIONS>;
 	type RewardRemainder = Treasury;
 	type RuntimeEvent = RuntimeEvent;
 	type Slash = Treasury; // send the slashed funds to the treasury.
@@ -823,8 +847,17 @@ parameter_types! {
 	// maximum active validators the staking pallet can have.
 	pub MaxActiveValidators: u32 = 1000;
 
+	// Note: the EPM in this runtime runs the election on-chain. The election bounds must be
+	// carefully set so that an election round fits in one block.
+	pub ElectionBoundsMultiPhase: ElectionBounds = ElectionBoundsBuilder::default()
+		.voters_count(10_000.into()).targets_count(1_500.into()).build();
+
 	// miner configs
 	pub const MultiPhaseUnsignedPriority: TransactionPriority = StakingUnsignedPriority::get() - 1u64;
+
+	pub ElectionBoundsOnChain: ElectionBounds = ElectionBoundsBuilder::default()
+		.voters_count(5_000.into()).targets_count(1_250.into()).build();
+
 	pub MinerMaxWeight: Weight = RuntimeBlockWeights::get()
 		.get(DispatchClass::Normal)
 		.max_extrinsic.expect("Normal extrinsics have a weight limit configured; qed")
@@ -847,8 +880,9 @@ impl onchain::Config for OnChainSeqPhragmen {
 	type DataProvider = <Runtime as pallet_election_provider_multi_phase::Config>::DataProvider;
 	type WeightInfo = frame_election_provider_support::weights::SubstrateWeight<Runtime>;
 	type MaxWinners = <Runtime as pallet_election_provider_multi_phase::Config>::MaxWinners;
-	type VotersBound = MaxOnChainElectingVoters;
-	type TargetsBound = MaxOnChainElectableTargets;
+	// type VotersBound = MaxOnChainElectingVoters;
+	// type TargetsBound = MaxOnChainElectableTargets;
+	type Bounds = ElectionBoundsOnChain;
 }
 
 pub struct SubmitMinerConfig;
@@ -921,9 +955,10 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type GovernanceFallback = onchain::OnChainExecution<OnChainSeqPhragmen>;
 	type Solver = SequentialPhragmen<AccountId, SolutionAccuracyOf<Self>, ()>;
 	type ForceOrigin = EnsureRoot<AccountId>;
-	type MaxElectableTargets = ConstU16<{ u16::MAX }>;
+	// type MaxElectableTargets = ConstU16<{ u16::MAX }>;
 	type MaxWinners = MaxActiveValidators;
-	type MaxElectingVoters = MaxElectingVoters;
+	type ElectionBounds = ElectionBoundsMultiPhase;
+	// type MaxElectingVoters = MaxElectingVoters;
 	type BenchmarkingConfig = ElectionProviderBenchmarkConfig;
 	type WeightInfo = pallet_election_provider_multi_phase::weights::SubstrateWeight<Self>;
 }
@@ -1055,7 +1090,7 @@ construct_runtime!(
 		Uniques: pallet_uniques,
 
 		// Smart contract
-		Contracts: pallet_contracts = 40,
+		// Contracts: pallet_contracts = 40,
 		RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
 
 		Treasury: pallet_treasury,
@@ -1068,10 +1103,10 @@ construct_runtime!(
 	}
 );
 
-type EventRecord = frame_system::EventRecord<
-	<Runtime as frame_system::Config>::RuntimeEvent,
-	<Runtime as frame_system::Config>::Hash,
->;
+// type EventRecord = frame_system::EventRecord<
+// 	<Runtime as frame_system::Config>::RuntimeEvent,
+// 	<Runtime as frame_system::Config>::Hash,
+// >;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benches {
@@ -1082,7 +1117,7 @@ mod benches {
 		[pallet_session, SessionBench::<Runtime>]
 		[pallet_timestamp, Timestamp]
 		[pallet_uniques, Uniques]
-		[pallet_contracts, Contracts]
+		// [pallet_contracts, Contracts]
 		[pallet_treasury, Treasury]
 		[pallet_bounties, Bounties]
 		[pallet_child_bounties, ChildBounties]
@@ -1107,75 +1142,75 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord> for Runtime {
-		fn call(
-			origin: AccountId,
-			dest: AccountId,
-			value: Balance,
-			gas_limit: Option<Weight>,
-			storage_deposit_limit: Option<Balance>,
-			input_data: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractExecResult<Balance,EventRecord> {
-			let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
-			Contracts::bare_call(
-				origin,
-				dest,
-				value,
-				gas_limit,
-				storage_deposit_limit,
-				input_data,
-				// contracts::CONTRACTS_DEBUG_OUTPUT,
-				pallet_contracts::DebugInfo::UnsafeDebug,
-				pallet_contracts::CollectEvents::UnsafeCollect,
-				pallet_contracts::Determinism::Enforced,
-			)
-		}
+	// impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord> for Runtime {
+	// 	fn call(
+	// 		origin: AccountId,
+	// 		dest: AccountId,
+	// 		value: Balance,
+	// 		gas_limit: Option<Weight>,
+	// 		storage_deposit_limit: Option<Balance>,
+	// 		input_data: Vec<u8>,
+	// 	) -> pallet_contracts_primitives::ContractExecResult<Balance,EventRecord> {
+	// 		let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
+	// 		Contracts::bare_call(
+	// 			origin,
+	// 			dest,
+	// 			value,
+	// 			gas_limit,
+	// 			storage_deposit_limit,
+	// 			input_data,
+	// 			// contracts::CONTRACTS_DEBUG_OUTPUT,
+	// 			pallet_contracts::DebugInfo::UnsafeDebug,
+	// 			pallet_contracts::CollectEvents::UnsafeCollect,
+	// 			pallet_contracts::Determinism::Enforced,
+	// 		)
+	// 	}
 
-		fn instantiate(
-			origin: AccountId,
-			value: Balance,
-			gas_limit: Option<Weight>,
-			storage_deposit_limit: Option<Balance>,
-			code: pallet_contracts_primitives::Code<Hash>,
-			data: Vec<u8>,
-			salt: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance,EventRecord> {
-			let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
-			Contracts::bare_instantiate(
-				origin,
-				value,
-				gas_limit,
-				storage_deposit_limit,
-				code,
-				data,
-				salt,
-				// contracts::CONTRACTS_DEBUG_OUTPUT,
-				pallet_contracts::DebugInfo::UnsafeDebug,
-				pallet_contracts::CollectEvents::UnsafeCollect,
-			)
-		}
+	// 	fn instantiate(
+	// 		origin: AccountId,
+	// 		value: Balance,
+	// 		gas_limit: Option<Weight>,
+	// 		storage_deposit_limit: Option<Balance>,
+	// 		code: pallet_contracts_primitives::Code<Hash>,
+	// 		data: Vec<u8>,
+	// 		salt: Vec<u8>,
+	// 	) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance,EventRecord> {
+	// 		let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
+	// 		Contracts::bare_instantiate(
+	// 			origin,
+	// 			value,
+	// 			gas_limit,
+	// 			storage_deposit_limit,
+	// 			code,
+	// 			data,
+	// 			salt,
+	// 			// contracts::CONTRACTS_DEBUG_OUTPUT,
+	// 			pallet_contracts::DebugInfo::UnsafeDebug,
+	// 			pallet_contracts::CollectEvents::UnsafeCollect,
+	// 		)
+	// 	}
 
-		fn upload_code(
-			origin: AccountId,
-			code: Vec<u8>,
-			storage_deposit_limit: Option<Balance>,
-			determinism: pallet_contracts::Determinism,
-		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance> {
-			Contracts::bare_upload_code(
-				origin,
-				code,
-				storage_deposit_limit,
-				determinism,
-			)
-		}
+	// 	fn upload_code(
+	// 		origin: AccountId,
+	// 		code: Vec<u8>,
+	// 		storage_deposit_limit: Option<Balance>,
+	// 		determinism: pallet_contracts::Determinism,
+	// 	) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance> {
+	// 		Contracts::bare_upload_code(
+	// 			origin,
+	// 			code,
+	// 			storage_deposit_limit,
+	// 			determinism,
+	// 		)
+	// 	}
 
-		fn get_storage(
-			address: AccountId,
-			key: Vec<u8>,
-		) -> pallet_contracts_primitives::GetStorageResult {
-			Contracts::get_storage(address, key)
-		}
-	}
+	// 	fn get_storage(
+	// 		address: AccountId,
+	// 		key: Vec<u8>,
+	// 	) -> pallet_contracts_primitives::GetStorageResult {
+	// 		Contracts::get_storage(address, key)
+	// 	}
+	// }
 
 	impl sp_api::Core<Block> for Runtime {
 		fn version() -> RuntimeVersion {
@@ -1368,31 +1403,7 @@ impl_runtime_apis! {
 	}
 }
 
-struct CheckInherents;
-
-impl cumulus_pallet_parachain_system::CheckInherents<Block> for CheckInherents {
-	fn check_inherents(
-		block: &Block,
-		relay_state_proof: &cumulus_pallet_parachain_system::RelayChainStateProof,
-	) -> sp_inherents::CheckInherentsResult {
-		let relay_chain_slot = relay_state_proof
-			.read_slot()
-			.expect("Could not read the relay chain slot from the proof");
-
-		let inherent_data =
-			cumulus_primitives_timestamp::InherentDataProvider::from_relay_chain_slot_and_duration(
-				relay_chain_slot,
-				sp_std::time::Duration::from_secs(6),
-			)
-			.create_inherent_data()
-			.expect("Could not create the timestamp inherent data");
-
-		inherent_data.check_extrinsics(block)
-	}
-}
-
 cumulus_pallet_parachain_system::register_validate_block! {
 	Runtime = Runtime,
 	BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
-	CheckInherents = CheckInherents,
 }
