@@ -545,6 +545,57 @@ impl pallet_motion::Config for Runtime {
 	type WeightInfo = pallet_motion::weights::SubstrateWeight<Runtime>;
 }
 
+parameter_types! {
+	pub const CommunityLoanPalletId: PalletId = PalletId(*b"py/loana");
+	pub const MaxLoans: u32 = 10000;
+	pub const VotingTime: BlockNumber = 20;
+	pub const MaximumCommitteeMembers: u32 = 10;
+}
+
+/// Configure the pallet-community-loan-pool in pallets/community-loan-pool.
+impl pallet_community_loan_pool::Config for Runtime {
+	type PalletId = CommunityLoanPalletId;
+	type Currency = Balances;
+	type ApproveOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 3, 5>,
+	>;
+	type RejectOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
+	>;
+	type CommitteeOrigin = EitherOfDiverse<
+		EnsureRoot<AccountId>,
+		pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
+	>;
+	type RuntimeEvent = RuntimeEvent;
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type ProposalBondMaximum = ();
+	type OnSlash = ();
+	type MaxOngoingLoans = MaxLoans;
+	type TimeProvider = Timestamp;
+	type WeightInfo = pallet_community_loan_pool::weights::SubstrateWeight<Runtime>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type Helper = pallet_nft::NftHelper;
+	type VotingTime = VotingTime;
+	type MaxCommitteeMembers = MaximumCommitteeMembers;
+}
+
+parameter_types! {
+	pub const MinimumRemainingAmount: Balance = DOLLARS;
+	pub const MaxStaker: u32 = 10000;
+}
+
+/// Configure the pallet-xcavate-staking in pallets/xcavate-staking.
+impl pallet_xcavate_staking::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type MinimumRemainingAmount = MinimumRemainingAmount;
+	type MaxStakers = MaxStaker;
+	type TimeProvider = Timestamp;
+}
+
 impl pallet_aura::Config for Runtime {
 	type AuthorityId = AuraId;
 	type DisabledValidators = ();
@@ -1097,6 +1148,8 @@ construct_runtime!(
 		Bounties: pallet_bounties,
 		ChildBounties: pallet_child_bounties,
 		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
+		CommunityLoanPool: pallet_community_loan_pool,
+		XcavateStaking: pallet_xcavate_staking,
 		NominationPools: pallet_nomination_pools::{Pallet, Call, Storage, Event<T>},
 		Staking: pallet_staking::{Pallet, Call, Config<T>, Storage, Event<T>},
 		BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>},
@@ -1118,6 +1171,7 @@ mod benches {
 		[pallet_timestamp, Timestamp]
 		[pallet_uniques, Uniques]
 		// [pallet_contracts, Contracts]
+		[pallet_community_loan_pool, CommunityLoanPool]
 		[pallet_treasury, Treasury]
 		[pallet_bounties, Bounties]
 		[pallet_child_bounties, ChildBounties]
