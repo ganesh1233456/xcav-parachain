@@ -3,39 +3,39 @@ name = "pallet-motion"
 version = "4.0.0-dev"
 description = "FRAME pallet to wrap council calls providing root origin to the council."
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
-homepage = "https://substrate.io"
-edition = "2021"
-license = "Unlicense"
+homepage = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 publish = false
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
+parity-scale-codec = { workspace = true, default-features = false, features = [
 	"derive",
 ] }
-log = { version = "0.4.17", default-features = false }
-scale-info = { version = "2.5.0", default-features = false, features = [
+log = { workspace = true, default-features = false }
+scale-info = { workspace = true, default-features = false, features = [
 	"derive",
 ] }
-frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-frame-support = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-frame-system = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-pallet-collective = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false, branch = "release-polkadot-v1.1.0" }
+frame-benchmarking = { workspace = true, default-features = false, optional = true }
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+sp-std = { workspace = true }
+sp-runtime = { workspace = true, default-features = false }
+pallet-collective = { workspace = true, default-features = false }
 
 [dev-dependencies]
-sp-core = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-polkadot-v1.1.0" }
-pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false, branch = "release-polkadot-v1.1.0" }
-pallet-membership = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false, branch = "release-polkadot-v1.1.0" }
+sp-core = { workspace = true, default-features = false }
+sp-io = { workspace = true, default-features = false }
+pallet-balances = { workspace = true, default-features = false }
+pallet-membership = { workspace = true, default-features = false }
 
 [features]
 default = ["std"]
 std = [
-	"codec/std",
+	"parity-scale-codec/std",
 	"frame-benchmarking?/std",
 	"frame-support/std",
 	"frame-system/std",

@@ -10,6 +10,9 @@ pub use parachains_common::{
 	impls::DealWithFees, AccountId, AuraId, Balance, Block, BlockNumber, Hash, Signature,
 };
 
+/// Nonce for an account
+pub type Nonce = u32;
+
 /// This determines the average expected block time that we are targeting.
 /// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.
 /// `SLOT_DURATION` is picked up by `pallet_timestamp` which is in turn picked
@@ -17,9 +20,6 @@ pub use parachains_common::{
 ///
 /// Change this to adjust the block time.
 pub const MILLISECS_PER_BLOCK: u64 = 12000;
-
-/// Nonce for an account
-pub type Nonce = u32;
 
 // NOTE: Currently it is not possible to change the slot duration after the chain has started.
 // Attempting to do so will brick block production.

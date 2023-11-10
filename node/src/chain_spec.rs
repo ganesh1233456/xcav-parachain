@@ -1,18 +1,14 @@
 use cumulus_primitives_core::ParaId;
-use devnet_runtime::constants::currency::DOLLARS;
-use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use runtime_common::{AccountId, AuraId, Signature};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
-use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
-// use sp_consensus_babe::AuthorityId as BabeId;
-use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::{
 	traits::{IdentifyAccount, Verify},
 	AccountId32,
 };
+
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type MainChainSpec =
 	sc_service::GenericChainSpec<mainnet_runtime::RuntimeGenesisConfig, Extensions>;
@@ -67,20 +63,6 @@ where
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
-/// Helper function to generate stash, controller and session key from seed.
-pub fn authority_keys_from_seed(
-	seed: &str,
-) -> (AccountId, AccountId, GrandpaId, AuraId, ImOnlineId, AuthorityDiscoveryId) {
-	(
-		get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", seed)),
-		get_account_id_from_seed::<sr25519::Public>(seed),
-		get_from_seed::<GrandpaId>(seed),
-		get_from_seed::<AuraId>(seed),
-		get_from_seed::<ImOnlineId>(seed),
-		get_from_seed::<AuthorityDiscoveryId>(seed),
-	)
-}
-
 /// Generate the session keys from individual elements.
 ///
 /// The input must be a tuple of individual keys (a single arg for now since we have just one key).
@@ -114,13 +96,11 @@ pub fn get_multisig_sudo_key(mut authority_set: Vec<AccountId32>, threshold: u16
 }
 
 pub mod devnet {
-	use sp_runtime::Perbill;
-
 	use super::*;
 	pub fn development_config() -> DevnetChainSpec {
-		// Give your base currency a xcav name and decimal places
+		// Give your base currency a unit name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "XCAV".into());
+		properties.insert("tokenSymbol".into(), "DEV".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
@@ -143,8 +123,6 @@ pub mod devnet {
 							get_collator_keys_from_seed("Bob"),
 						),
 					],
-					vec![authority_keys_from_seed("Alice")],
-					vec![],
 					vec![
 						get_account_id_from_seed::<sr25519::Public>("Alice"),
 						get_account_id_from_seed::<sr25519::Public>("Bob"),
@@ -167,7 +145,7 @@ pub mod devnet {
 			None,
 			None,
 			None,
-			Some(properties),
+			None,
 			Extensions {
 				relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
 				para_id: PARA_ID,
@@ -176,9 +154,9 @@ pub mod devnet {
 	}
 
 	pub fn local_testnet_config() -> DevnetChainSpec {
-		// Give your base currency a xcav name and decimal places
+		// Give your base currency a unit name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "XCAV".into());
+		properties.insert("tokenSymbol".into(), "UNIT".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
@@ -201,8 +179,6 @@ pub mod devnet {
 							get_collator_keys_from_seed("Bob"),
 						),
 					],
-					vec![authority_keys_from_seed("Alice")],
-					vec![],
 					vec![
 						get_account_id_from_seed::<sr25519::Public>("Alice"),
 						get_account_id_from_seed::<sr25519::Public>("Bob"),
@@ -241,56 +217,13 @@ pub mod devnet {
 
 	fn testnet_genesis(
 		invulnerables: Vec<(AccountId, AuraId)>,
-		initial_authorities: Vec<(
-			AccountId,
-			AccountId,
-			GrandpaId,
-			AuraId,
-			ImOnlineId,
-			AuthorityDiscoveryId,
-		)>,
-		initial_nominators: Vec<AccountId>,
-		mut endowed_accounts: Vec<AccountId>,
+		endowed_accounts: Vec<AccountId>,
 		root_key: Option<AccountId>,
 		id: ParaId,
 	) -> devnet_runtime::RuntimeGenesisConfig {
 		use devnet_runtime::EXISTENTIAL_DEPOSIT;
 		let alice = get_from_seed::<sr25519::Public>("Alice");
 		let bob = get_from_seed::<sr25519::Public>("Bob");
-
-		// endow all authorities and nominators.
-		initial_authorities
-			.iter()
-			.map(|x| &x.0)
-			.chain(initial_nominators.iter())
-			.for_each(|x| {
-				if !endowed_accounts.contains(x) {
-					endowed_accounts.push(x.clone())
-				}
-			});
-
-		// stakers: all validators and nominators.
-		let mut rng = rand::thread_rng();
-		let stakers = initial_authorities
-			.iter()
-			.map(|x| (x.0.clone(), x.0.clone(), STASH, devnet_runtime::StakerStatus::Validator))
-			.chain(initial_nominators.iter().map(|x| {
-				use rand::{seq::SliceRandom, Rng};
-				let limit =
-					(devnet_runtime::MaxNominations::get() as usize).min(initial_authorities.len());
-				let count = rng.gen::<usize>() % limit;
-				let nominations = initial_authorities
-					.as_slice()
-					.choose_multiple(&mut rng, count)
-					.into_iter()
-					.map(|choice| choice.0.clone())
-					.collect::<Vec<_>>();
-				(x.clone(), x.clone(), STASH, devnet_runtime::StakerStatus::Nominator(nominations))
-			}))
-			.collect::<Vec<_>>();
-
-		const ENDOWMENT: devnet_runtime::Balance = 10_000_000 * DOLLARS;
-		const STASH: devnet_runtime::Balance = ENDOWMENT / 1000;
 
 		devnet_runtime::RuntimeGenesisConfig {
 			system: devnet_runtime::SystemConfig {
@@ -319,7 +252,6 @@ pub mod devnet {
 					(2, bob.into(), 500_000_000_000),
 				],
 			},
-			treasury: Default::default(),
 			parachain_info: devnet_runtime::ParachainInfoConfig {
 				parachain_id: id,
 				..Default::default()
@@ -329,7 +261,6 @@ pub mod devnet {
 				candidacy_bond: EXISTENTIAL_DEPOSIT * 16,
 				..Default::default()
 			},
-
 			session: devnet_runtime::SessionConfig {
 				keys: invulnerables
 					.into_iter()
@@ -341,14 +272,6 @@ pub mod devnet {
 						)
 					})
 					.collect(),
-			},
-			staking: devnet_runtime::StakingConfig {
-				validator_count: initial_authorities.len() as u32,
-				minimum_validator_count: initial_authorities.len() as u32,
-				invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
-				slash_reward_fraction: Perbill::from_percent(10),
-				stakers,
-				..Default::default()
 			},
 			// no need to pass anything to aura, in fact it will panic if we do. Session will take care
 			// of this.
@@ -365,6 +288,8 @@ pub mod devnet {
 				..Default::default()
 			},
 			transaction_payment: Default::default(),
+			safe_mode: Default::default(),
+			tx_pause: Default::default(),
 		}
 	}
 }
@@ -372,9 +297,9 @@ pub mod devnet {
 pub mod mainnet {
 	use super::*;
 	pub fn development_config() -> MainChainSpec {
-		// Give your base currency a xcav name and decimal places
+		// Give your base currency a unit name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "XCAV".into());
+		properties.insert("tokenSymbol".into(), "UNIT".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
@@ -429,7 +354,7 @@ pub mod mainnet {
 			None,
 			None,
 			None,
-			Some(properties),
+			None,
 			Extensions {
 				relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
 				para_id: PARA_ID,
@@ -438,9 +363,9 @@ pub mod mainnet {
 	}
 
 	pub fn local_testnet_config() -> MainChainSpec {
-		// Give your base currency a xcav name and decimal places
+		// Give your base currency a unit name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "XCAV".into());
+		properties.insert("tokenSymbol".into(), "UNIT".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
@@ -588,6 +513,8 @@ pub mod mainnet {
 				..Default::default()
 			},
 			transaction_payment: Default::default(),
+			safe_mode: Default::default(),
+			tx_pause: Default::default(),
 		}
 	}
 }
