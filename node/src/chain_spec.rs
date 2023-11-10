@@ -98,7 +98,7 @@ pub fn get_multisig_sudo_key(mut authority_set: Vec<AccountId32>, threshold: u16
 pub mod devnet {
 	use super::*;
 	pub fn development_config() -> DevnetChainSpec {
-		// Give your base currency a unit name and decimal places
+		// Give your base currency a XCAV name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
 		properties.insert("tokenSymbol".into(), "DEV".into());
 		properties.insert("tokenDecimals".into(), 12.into());
@@ -154,9 +154,9 @@ pub mod devnet {
 	}
 
 	pub fn local_testnet_config() -> DevnetChainSpec {
-		// Give your base currency a unit name and decimal places
+		// Give your base currency a XCAV name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "UNIT".into());
+		properties.insert("tokenSymbol".into(), "XCAV".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
@@ -297,9 +297,9 @@ pub mod devnet {
 pub mod mainnet {
 	use super::*;
 	pub fn development_config() -> MainChainSpec {
-		// Give your base currency a unit name and decimal places
+		// Give your base currency a XCAV name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "UNIT".into());
+		properties.insert("tokenSymbol".into(), "XCAV".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
@@ -363,9 +363,9 @@ pub mod mainnet {
 	}
 
 	pub fn local_testnet_config() -> MainChainSpec {
-		// Give your base currency a unit name and decimal places
+		// Give your base currency a XCAV name and decimal places
 		let mut properties = sc_chain_spec::Properties::new();
-		properties.insert("tokenSymbol".into(), "UNIT".into());
+		properties.insert("tokenSymbol".into(), "XCAV".into());
 		properties.insert("tokenDecimals".into(), 12.into());
 		properties.insert("ss58Format".into(), 42.into());
 
