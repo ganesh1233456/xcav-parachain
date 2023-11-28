@@ -26,6 +26,6 @@ brew install openssl cmake llvm
 - ### Install the `wasm` target for your rust toolchain
 
 ```sh
-rustup update nightly
-rustup target add wasm32-unknown-unknown --toolchain nightly
+rustup update
+rustup target add wasm32-unknown-unknown
 ```
