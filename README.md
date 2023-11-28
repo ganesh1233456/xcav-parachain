@@ -79,3 +79,5 @@ parathreads [here](https://wiki.polkadot.network/docs/learn-parathreads).
  ## 🏛 Governance
 
  Parachain governance is a very crucial topic that goes beyond using `sudo` for privileged calls. [Read our Governance Explainer here](./docs/governance.md)
+
+ <!-- 4,323 -->

@@ -20,7 +20,7 @@ pub type DevnetChainSpec =
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
 
-const PARA_ID: u32 = 2000;
+const PARA_ID: u32 = 4323;
 
 /// Helper function to generate a crypto pair from seed
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
